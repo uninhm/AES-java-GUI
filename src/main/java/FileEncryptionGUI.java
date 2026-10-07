@@ -58,15 +58,20 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
     private void updateResult() {
         try {
             AES aes = new AES(keyField.getText());
+
             if (selectedModeButton.getText().equals("ENCRYPT")) {
+                // Encrypt the file content and show the result as hex
                 resultPreviewArea.setText(hexFormat.formatHex(aes.encrypt(filePreviewArea.getText())));
             } else {
+                // Decrypt the file content and show the result as UTF-8 text
                 String res = new String(
                         aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())),
                         StandardCharsets.UTF_8
                 );
                 resultPreviewArea.setText(res);
             }
+
+            // Enable the save button if no error occurred
             saveButton.setEnabled(true);
         } catch (InvalidKeySizeException ex) {
             resultPreviewArea.setText("Invalid key size");
@@ -279,6 +284,11 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_saveButtonActionPerformed
 
+    /**
+     * Switches the selected mode between encryption and decryption.
+     *
+     * @param evt ActionEvent
+     */
     private void selectedModeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectedModeButtonActionPerformed
         if (selectedModeButton.getText().equals("ENCRYPT"))
             selectedModeButton.setText("DECRYPT");
@@ -286,6 +296,10 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
             selectedModeButton.setText("ENCRYPT");
     }//GEN-LAST:event_selectedModeButtonActionPerformed
 
+    /**
+     * Exits the application.
+     * @param evt ActionEvent
+     */
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         System.exit(0);
     }//GEN-LAST:event_cancelButtonActionPerformed
