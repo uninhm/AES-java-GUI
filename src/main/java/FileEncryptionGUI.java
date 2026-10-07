@@ -1,95 +1,336 @@
 import aes.AES;
+import aes.InvalidKeySizeException;
 
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.HexFormat;
 
 /**
- * @author uninhm
+ *
+ * @author unihe
  */
-public class FileEncryptionGUI extends JFrame {
-    private String DEFAULT_MODE = "ENCRYPT";
+public class FileEncryptionGUI extends javax.swing.JFrame {
 
-    private JPanel contentPane;
-    private JMenuBar menuBar;
-    private JMenu fileMenu;
-    private JPanel centerPanel;
-    private JPanel selectedModePanel;
-    private JButton changeModeButton;
-    private JTextArea filePreview, resultPreview;
-    private JScrollPane filePreviewScrollPane;
-    private JPanel buttonBar;
-    private JButton okButton;
-    private JButton cancelButton;
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FileEncryptionGUI.class.getName());
 
-    private String selectedMode;
+    private static final HexFormat hexFormat = HexFormat.of().withUpperCase();
 
+    /**
+     * Creates new form FileEncryptionGUI
+     */
     public FileEncryptionGUI() {
-        super("File encryption and decryption GUI");
+        initComponents();
 
-        contentPane = new JPanel();
-
-        contentPane.setLayout(new BorderLayout());
-
-        // Set up menu bar
-        menuBar = new JMenuBar();
-        fileMenu = new JMenu();
-        fileMenu.add("Import file");
-        menuBar.add(new JMenu("File"));
-        contentPane.add(menuBar, BorderLayout.NORTH);
-
-        // Set up the center panel
-        centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Add the selected mode row to the center panel
-        selectedModePanel = new JPanel();
-        selectedModePanel.setLayout(new BoxLayout(selectedModePanel, BoxLayout.X_AXIS));
-        JLabel l = new JLabel("Selected mode:");
-        l.setAlignmentX(Component.LEFT_ALIGNMENT);
-        selectedModePanel.add(l);
-        selectedMode = DEFAULT_MODE;
-        changeModeButton = new JButton(selectedMode);
-        changeModeButton.addMouseListener(new MouseAdapter() {
+        // Document listener that updates the result preview on every change
+        DocumentListener documentListener = new DocumentListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                if (selectedMode.equals("ENCRYPT"))
-                    selectedMode = "DECRYPT";
-                else
-                    selectedMode = "ENCRYPT";
-                changeModeButton.setText(selectedMode);
+            public void removeUpdate(DocumentEvent e) {
+                updateResult();
             }
-        });
-        selectedModePanel.add(changeModeButton);
 
-        centerPanel.add(selectedModePanel);
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateResult();
+            }
 
-        // Add the file preview to the center panel
-        l = new JLabel("File preview:");
-        l.setAlignmentX(Component.LEFT_ALIGNMENT);
-        centerPanel.add(l);
-        filePreview = new JTextArea();
-        filePreviewScrollPane = new JScrollPane(filePreview);
-        filePreviewScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-        centerPanel.add(filePreviewScrollPane);
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateResult();
+            }
+        };
 
-        // Add the center panel to the content pane
-        contentPane.add(centerPanel, BorderLayout.CENTER);
+        // Auto-update result preview when file preview changes
+        filePreviewArea.getDocument().addDocumentListener(documentListener);
 
-        this.setContentPane(contentPane);
+        // Auto-update result preview when key changes
+        keyField.getDocument().addDocumentListener(documentListener);
     }
 
-    public static void main(String[] args) {
-        AES aes = new AES("000102030405060708090a0b0c0d0e0f");
-        System.out.println(HexFormat.of().formatHex(aes.encrypt("Hola")));
-
-        FileEncryptionGUI frame = new FileEncryptionGUI();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 500);
-        frame.setVisible(true);
+    /**
+     * Updates the result preview area with the result of the encryption/decryption.
+     */
+    private void updateResult() {
+        try {
+            AES aes = new AES(keyField.getText());
+            if (selectedModeButton.getText().equals("ENCRYPT")) {
+                resultPreviewArea.setText(hexFormat.formatHex(aes.encrypt(filePreviewArea.getText())));
+            } else {
+                String res = new String(
+                        aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())),
+                        StandardCharsets.UTF_8
+                );
+                resultPreviewArea.setText(res);
+            }
+            saveButton.setEnabled(true);
+        } catch (InvalidKeySizeException ex) {
+            resultPreviewArea.setText("Invalid key size");
+            saveButton.setEnabled(false);
+        } catch (IllegalArgumentException ex) {
+            resultPreviewArea.setText("Invalid hexadecimal representation of the key");
+            saveButton.setEnabled(false);
+        }
     }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        contentPane = new javax.swing.JPanel();
+        selectedModeLabel = new javax.swing.JLabel();
+        selectedModeButton = new javax.swing.JButton();
+        filePreviewLabel = new javax.swing.JLabel();
+        filePreviewScrollPane = new javax.swing.JScrollPane();
+        filePreviewArea = new javax.swing.JTextArea();
+        resultPreviewLabel = new javax.swing.JLabel();
+        resultPreviewScrollPane = new javax.swing.JScrollPane();
+        resultPreviewArea = new javax.swing.JTextArea();
+        keyLabel = new javax.swing.JLabel();
+        keyField = new javax.swing.JTextField();
+        saveButton = new javax.swing.JButton();
+        cancelButton = new javax.swing.JButton();
+        menuBar = new javax.swing.JMenuBar();
+        fileMenu = new javax.swing.JMenu();
+        importFileItem = new javax.swing.JMenuItem();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Encrypt and decrypt files");
+        setResizable(false);
+
+        selectedModeLabel.setText("Selected mode:");
+        selectedModeLabel.setToolTipText("");
+
+        selectedModeButton.setText("ENCRYPT");
+        selectedModeButton.addActionListener(this::selectedModeButtonActionPerformed);
+
+        filePreviewLabel.setText("File preview:");
+
+        filePreviewArea.setColumns(20);
+        filePreviewArea.setLineWrap(true);
+        filePreviewArea.setRows(5);
+        filePreviewScrollPane.setViewportView(filePreviewArea);
+
+        resultPreviewLabel.setText("Result preview:");
+
+        resultPreviewArea.setColumns(20);
+        resultPreviewArea.setLineWrap(true);
+        resultPreviewArea.setRows(5);
+        resultPreviewArea.setEnabled(false);
+        resultPreviewScrollPane.setViewportView(resultPreviewArea);
+
+        keyLabel.setText("Key:");
+
+        keyField.setText("000102030405060708090a0b0c0d0e0f");
+
+        saveButton.setText("Save");
+        saveButton.addActionListener(this::saveButtonActionPerformed);
+
+        cancelButton.setText("Cancel");
+        cancelButton.addActionListener(this::cancelButtonActionPerformed);
+
+        javax.swing.GroupLayout contentPaneLayout = new javax.swing.GroupLayout(contentPane);
+        contentPane.setLayout(contentPaneLayout);
+        contentPaneLayout.setHorizontalGroup(
+                contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(contentPaneLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(contentPaneLayout.createSequentialGroup()
+                                                .addGroup(contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(filePreviewLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(filePreviewScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(resultPreviewLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(resultPreviewScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addGroup(contentPaneLayout.createSequentialGroup()
+                                                .addGroup(contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(contentPaneLayout.createSequentialGroup()
+                                                                .addComponent(selectedModeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 331, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(selectedModeButton)
+                                                                .addGap(0, 0, Short.MAX_VALUE))
+                                                        .addGroup(contentPaneLayout.createSequentialGroup()
+                                                                .addComponent(keyLabel)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                                .addComponent(keyField)))
+                                                .addGap(6, 6, 6))))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(saveButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cancelButton)
+                                .addGap(7, 7, 7))
+        );
+        contentPaneLayout.setVerticalGroup(
+                contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(contentPaneLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(selectedModeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(selectedModeButton, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(filePreviewLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(filePreviewScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(resultPreviewLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(resultPreviewScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(keyLabel)
+                                        .addComponent(keyField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(contentPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(saveButton)
+                                        .addComponent(cancelButton))
+                                .addContainerGap())
+        );
+
+        fileMenu.setText("File");
+
+        importFileItem.setText("Import file");
+        importFileItem.addActionListener(this::importFileItemActionPerformed);
+        fileMenu.add(importFileItem);
+
+        menuBar.add(fileMenu);
+
+        setJMenuBar(menuBar);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(contentPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(contentPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    /**
+     * Opens a file dialog and loads the file into the file preview area.
+     *
+     * @param evt ActionEvent
+     */
+    private void importFileItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importFileItemActionPerformed
+        // Open file dialog
+        final JFileChooser fc = new JFileChooser();
+        fc.showOpenDialog(this);
+        File file = fc.getSelectedFile();
+
+        // Try to load the file content into the file preview area
+        try {
+            if (selectedModeButton.getText().equals("ENCRYPT")) {
+                // Read file as UTF-8 text
+                filePreviewArea.setText(Files.readString(file.toPath()));
+            } else {
+                // Read file as bytes and format as hex
+                filePreviewArea.setText(hexFormat.formatHex(Files.readAllBytes(file.toPath())));
+            }
+        } catch (IOException ex) {
+            System.getLogger(FileEncryptionGUI.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+    }//GEN-LAST:event_importFileItemActionPerformed
+
+    /**
+     * Opens a file dialog and saves the result into the file.
+     *
+     * @param evt ActionEvent
+     */
+    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
+        // Open file dialog
+        final JFileChooser fc = new JFileChooser();
+        fc.showSaveDialog(this);
+        File file = fc.getSelectedFile();
+
+        AES aes;
+        try {
+            aes = new AES(keyField.getText());
+
+            FileOutputStream outputStream = new FileOutputStream(file);
+            if (selectedModeButton.getText().equals("ENCRYPT")) {
+                // Write the encrypted file content to the file as bytes
+                outputStream.write(aes.encrypt(filePreviewArea.getText()));
+            } else {
+                // Prepend UTF-8 BOM
+                outputStream.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+                // Write the decrypted file content to the file as bytes
+                outputStream.write(aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())));
+            }
+            outputStream.close();
+        } catch (InvalidKeySizeException ex) {
+            System.out.println(ex.toString());
+        } catch (IOException ex) {
+            System.getLogger(FileEncryptionGUI.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+    }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void selectedModeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectedModeButtonActionPerformed
+        if (selectedModeButton.getText().equals("ENCRYPT"))
+            selectedModeButton.setText("DECRYPT");
+        else
+            selectedModeButton.setText("ENCRYPT");
+    }//GEN-LAST:event_selectedModeButtonActionPerformed
+
+    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_cancelButtonActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(() -> new FileEncryptionGUI().setVisible(true));
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton cancelButton;
+    private javax.swing.JPanel contentPane;
+    private javax.swing.JMenu fileMenu;
+    private javax.swing.JTextArea filePreviewArea;
+    private javax.swing.JLabel filePreviewLabel;
+    private javax.swing.JScrollPane filePreviewScrollPane;
+    private javax.swing.JMenuItem importFileItem;
+    private javax.swing.JTextField keyField;
+    private javax.swing.JLabel keyLabel;
+    private javax.swing.JMenuBar menuBar;
+    private javax.swing.JTextArea resultPreviewArea;
+    private javax.swing.JLabel resultPreviewLabel;
+    private javax.swing.JScrollPane resultPreviewScrollPane;
+    private javax.swing.JButton saveButton;
+    private javax.swing.JButton selectedModeButton;
+    private javax.swing.JLabel selectedModeLabel;
+    // End of variables declaration//GEN-END:variables
 }
