@@ -1,5 +1,4 @@
-import aes.AES;
-import aes.InvalidKeySizeException;
+import aes.*;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -7,13 +6,14 @@ import javax.swing.event.DocumentListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HexFormat;
 
 /**
  *
- * @author unihe
+ * @author uninhm
  */
 public class FileEncryptionGUI extends javax.swing.JFrame {
 
@@ -21,8 +21,12 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
 
     private static final HexFormat hexFormat = HexFormat.of().withUpperCase();
 
+    private Charset selectedCharset = StandardCharsets.UTF_8;
+    private Padding selectedPadding = new PaddingPKCS7();
+    private File loadedFile;
+
     /**
-     * Creates new form FileEncryptionGUI
+     * Creates a new form FileEncryptionGUI
      */
     public FileEncryptionGUI() {
         initComponents();
@@ -57,16 +61,18 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
      */
     private void updateResult() {
         try {
-            AES aes = new AES(keyField.getText());
+            AES aes = new AES(keyField.getText(), selectedPadding);
 
-            if (selectedModeButton.getText().equals("ENCRYPT")) {
+            if (binaryFileModeCheckbox.isSelected()) {
+                resultPreviewArea.setText("");
+            } else if (selectedModeButton.getText().equals("ENCRYPT")) {
                 // Encrypt the file content and show the result as hex
                 resultPreviewArea.setText(hexFormat.formatHex(aes.encrypt(filePreviewArea.getText())));
             } else {
                 // Decrypt the file content and show the result as UTF-8 text
                 String res = new String(
                         aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())),
-                        StandardCharsets.UTF_8
+                        selectedCharset
                 );
                 resultPreviewArea.setText(res);
             }
@@ -77,7 +83,7 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
             resultPreviewArea.setText("Invalid key size");
             saveButton.setEnabled(false);
         } catch (IllegalArgumentException ex) {
-            resultPreviewArea.setText("Invalid hexadecimal representation of the key");
+            resultPreviewArea.setText("Invalid hexadecimal representation");
             saveButton.setEnabled(false);
         }
     }
@@ -107,6 +113,14 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         importFileItem = new javax.swing.JMenuItem();
+        settingsMenu = new javax.swing.JMenu();
+        setPaddingMenu = new javax.swing.JMenu();
+        pkcs7PaddingItem = new javax.swing.JMenuItem();
+        zerosPaddingItem = new javax.swing.JMenuItem();
+        setCharsetMenu = new javax.swing.JMenu();
+        setCharsetUTF8Item = new javax.swing.JMenuItem();
+        setCharsetUTF16Item = new javax.swing.JMenuItem();
+        binaryFileModeCheckbox = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Encrypt and decrypt files");
@@ -210,6 +224,38 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
 
         menuBar.add(fileMenu);
 
+        settingsMenu.setText("Settings");
+
+        setPaddingMenu.setText("Set padding");
+
+        pkcs7PaddingItem.setText("PKCS7");
+        pkcs7PaddingItem.addActionListener(this::pkcs7PaddingItemActionPerformed);
+        setPaddingMenu.add(pkcs7PaddingItem);
+
+        zerosPaddingItem.setText("Zeros (deprecated)");
+        zerosPaddingItem.addActionListener(this::zerosPaddingItemActionPerformed);
+        setPaddingMenu.add(zerosPaddingItem);
+
+        settingsMenu.add(setPaddingMenu);
+
+        setCharsetMenu.setText("Set charset");
+
+        setCharsetUTF8Item.setText("UTF-8");
+        setCharsetUTF8Item.addActionListener(this::setCharsetUTF8ItemActionPerformed);
+        setCharsetMenu.add(setCharsetUTF8Item);
+
+        setCharsetUTF16Item.setText("UTF-16");
+        setCharsetUTF16Item.addActionListener(this::setCharsetUTF16ItemActionPerformed);
+        setCharsetMenu.add(setCharsetUTF16Item);
+
+        settingsMenu.add(setCharsetMenu);
+
+        binaryFileModeCheckbox.setText("Binary file mode");
+        binaryFileModeCheckbox.addActionListener(this::binaryFileModeCheckboxActionPerformed);
+        settingsMenu.add(binaryFileModeCheckbox);
+
+        menuBar.add(settingsMenu);
+
         setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -239,9 +285,12 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
 
         // Try to load the file content into the file preview area
         try {
-            if (selectedModeButton.getText().equals("ENCRYPT")) {
-                // Read file as UTF-8 text
-                filePreviewArea.setText(Files.readString(file.toPath()));
+            if (binaryFileModeCheckbox.isSelected()) {
+                filePreviewArea.setText("Binary file loaded.");
+                loadedFile = file;
+            } else if (selectedModeButton.getText().equals("ENCRYPT")) {
+                // Read the file with the given charset
+                filePreviewArea.setText(Files.readString(file.toPath(), selectedCharset));
             } else {
                 // Read file as bytes and format as hex
                 filePreviewArea.setText(hexFormat.formatHex(Files.readAllBytes(file.toPath())));
@@ -264,15 +313,21 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
 
         AES aes;
         try {
-            aes = new AES(keyField.getText());
+            aes = new AES(keyField.getText(), selectedPadding);
 
             FileOutputStream outputStream = new FileOutputStream(file);
-            if (selectedModeButton.getText().equals("ENCRYPT")) {
+            if (binaryFileModeCheckbox.isSelected()) {
+                if (loadedFile == null)
+                    resultPreviewArea.setText("No file loaded.");
+                else if (selectedModeButton.getText().equals("ENCRYPT"))
+                    // Write the encrypted file content to the file as bytes
+                    outputStream.write(aes.encrypt(Files.readAllBytes(loadedFile.toPath())));
+                else
+                    outputStream.write(aes.decrypt(Files.readAllBytes(loadedFile.toPath())));
+            } else if (selectedModeButton.getText().equals("ENCRYPT")) {
                 // Write the encrypted file content to the file as bytes
-                outputStream.write(aes.encrypt(filePreviewArea.getText()));
+                outputStream.write(aes.encrypt(filePreviewArea.getText(), selectedCharset));
             } else {
-                // Prepend UTF-8 BOM
-                outputStream.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
                 // Write the decrypted file content to the file as bytes
                 outputStream.write(aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())));
             }
@@ -304,6 +359,26 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_cancelButtonActionPerformed
 
+    private void setCharsetUTF16ItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setCharsetUTF16ItemActionPerformed
+        selectedCharset = StandardCharsets.UTF_16;
+    }//GEN-LAST:event_setCharsetUTF16ItemActionPerformed
+
+    private void pkcs7PaddingItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pkcs7PaddingItemActionPerformed
+        selectedPadding = new PaddingPKCS7();
+    }//GEN-LAST:event_pkcs7PaddingItemActionPerformed
+
+    private void zerosPaddingItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zerosPaddingItemActionPerformed
+        selectedPadding = new PaddingZeros();
+    }//GEN-LAST:event_zerosPaddingItemActionPerformed
+
+    private void setCharsetUTF8ItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setCharsetUTF8ItemActionPerformed
+        selectedCharset = StandardCharsets.UTF_8;
+    }//GEN-LAST:event_setCharsetUTF8ItemActionPerformed
+
+    private void binaryFileModeCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_binaryFileModeCheckboxActionPerformed
+        filePreviewArea.setEnabled(!binaryFileModeCheckbox.isSelected());
+    }//GEN-LAST:event_binaryFileModeCheckboxActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -330,6 +405,7 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBoxMenuItem binaryFileModeCheckbox;
     private javax.swing.JButton cancelButton;
     private javax.swing.JPanel contentPane;
     private javax.swing.JMenu fileMenu;
@@ -340,11 +416,18 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
     private javax.swing.JTextField keyField;
     private javax.swing.JLabel keyLabel;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenuItem pkcs7PaddingItem;
     private javax.swing.JTextArea resultPreviewArea;
     private javax.swing.JLabel resultPreviewLabel;
     private javax.swing.JScrollPane resultPreviewScrollPane;
     private javax.swing.JButton saveButton;
     private javax.swing.JButton selectedModeButton;
     private javax.swing.JLabel selectedModeLabel;
+    private javax.swing.JMenu setCharsetMenu;
+    private javax.swing.JMenuItem setCharsetUTF16Item;
+    private javax.swing.JMenuItem setCharsetUTF8Item;
+    private javax.swing.JMenu setPaddingMenu;
+    private javax.swing.JMenu settingsMenu;
+    private javax.swing.JMenuItem zerosPaddingItem;
     // End of variables declaration//GEN-END:variables
 }
