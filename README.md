@@ -6,7 +6,7 @@ GUI for the AES-java library.
 This project is built with Maven and requires JDK 21 or newer.
 
 1. Install Java 21 and Maven.
-2. Install [AES-java](https://github.com/uninhm/AES-java#Install-with-Maven) (i.e. run `mvn install` that project's source folder).
+2. Install [AES-java](https://github.com/uninhm/AES-java#option-2-install-with-maven) (i.e. run `mvn install` that project's source folder).
 3. Open a terminal in the project root.
 4. Run:
 
@@ -23,7 +23,7 @@ target/AES-java-GUI-1.0-SNAPSHOT-jar-with-dependencies.jar
 ## How to use
 You can get the program either by building it youself or via the JAR provided in the releases. Then you can run something like (depending on the file's name and location):
 ```bash
-java -jar AES-java-GUI-1.0-SNAPSHOT-jar-with-dependencies.jar
+java -jar target/AES-java-GUI-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Settings
