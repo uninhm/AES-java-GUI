@@ -64,7 +64,10 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
             AES aes = new AES(keyField.getText(), selectedPadding);
 
             if (binaryFileModeCheckbox.isSelected()) {
-                resultPreviewArea.setText("");
+                if (loadedFile != null)
+                    resultPreviewArea.setText("Press save to decrypt the binary file");
+                else
+                    resultPreviewArea.setText("");
             } else if (selectedModeButton.getText().equals("ENCRYPT")) {
                 // Encrypt the file content and show the result as hex
                 resultPreviewArea.setText(hexFormat.formatHex(aes.encrypt(filePreviewArea.getText())));
@@ -283,6 +286,9 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
         fc.showOpenDialog(this);
         File file = fc.getSelectedFile();
 
+        if (file == null)
+            return;
+
         // Try to load the file content into the file preview area
         try {
             if (binaryFileModeCheckbox.isSelected()) {
@@ -295,6 +301,8 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
                 // Read file as bytes and format as hex
                 filePreviewArea.setText(hexFormat.formatHex(Files.readAllBytes(file.toPath())));
             }
+
+            updateResult();
         } catch (IOException ex) {
             System.getLogger(FileEncryptionGUI.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
@@ -349,6 +357,7 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
             selectedModeButton.setText("DECRYPT");
         else
             selectedModeButton.setText("ENCRYPT");
+        updateResult();
     }//GEN-LAST:event_selectedModeButtonActionPerformed
 
     /**
@@ -361,18 +370,22 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
 
     private void setCharsetUTF16ItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setCharsetUTF16ItemActionPerformed
         selectedCharset = StandardCharsets.UTF_16;
+        updateResult();
     }//GEN-LAST:event_setCharsetUTF16ItemActionPerformed
 
     private void pkcs7PaddingItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pkcs7PaddingItemActionPerformed
         selectedPadding = new PaddingPKCS7();
+        updateResult();
     }//GEN-LAST:event_pkcs7PaddingItemActionPerformed
 
     private void zerosPaddingItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zerosPaddingItemActionPerformed
         selectedPadding = new PaddingZeros();
+        updateResult();
     }//GEN-LAST:event_zerosPaddingItemActionPerformed
 
     private void setCharsetUTF8ItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setCharsetUTF8ItemActionPerformed
         selectedCharset = StandardCharsets.UTF_8;
+        updateResult();
     }//GEN-LAST:event_setCharsetUTF8ItemActionPerformed
 
     private void binaryFileModeCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_binaryFileModeCheckboxActionPerformed
