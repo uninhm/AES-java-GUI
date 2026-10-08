@@ -43,7 +43,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>dev.uninhm.aes.FileEncryptionGUI</mainClass>
+                            <mainClass>FileEncryptionGUI</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
