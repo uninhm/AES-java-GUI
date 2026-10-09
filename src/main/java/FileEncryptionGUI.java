@@ -70,14 +70,19 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
                     resultPreviewArea.setText("");
             } else if (selectedModeButton.getText().equals("ENCRYPT")) {
                 // Encrypt the file content and show the result as hex
-                resultPreviewArea.setText(hexFormat.formatHex(aes.encrypt(filePreviewArea.getText())));
+                resultPreviewArea.setText(
+                        hexFormat.formatHex(
+                                aes.encrypt(filePreviewArea.getText(), selectedCharset)
+                        )
+                );
             } else {
                 // Decrypt the file content and show the result
-                String res = new String(
-                        aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())),
-                        selectedCharset
+                resultPreviewArea.setText(
+                        aes.decrypt(
+                                hexFormat.parseHex(filePreviewArea.getText()),
+                                selectedCharset
+                        )
                 );
-                resultPreviewArea.setText(res);
             }
 
             // Enable the save button if no error occurred
@@ -337,6 +342,7 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
                 outputStream.write(aes.encrypt(filePreviewArea.getText(), selectedCharset));
             } else {
                 // Write the decrypted file content to the file as bytes
+                // We don't need to decode the characters because we copy the bytes directly to the file.
                 outputStream.write(aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())));
             }
             outputStream.close();
