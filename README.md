@@ -1,6 +1,9 @@
 # AES-java-GUI
 GUI for the AES-java library.
 
+<img width="328" height="305" alt="Screenshot 2026-10-08 225602" src="https://github.com/user-attachments/assets/87168498-5ff1-4d2e-b4ab-951756056aea" />
+<img width="328" height="305" alt="Screenshot 2026-10-08 225639" src="https://github.com/user-attachments/assets/3cefeabe-b20a-4bdd-8d45-d41b7aee56e5" />
+
 ## How to build
 
 This project is built with Maven and requires JDK 21 or newer.
