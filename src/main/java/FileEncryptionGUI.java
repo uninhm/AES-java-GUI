@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.util.HexFormat;
 
 /**
- *
+ * GUI for encrypting and decrypting files.
  * @author uninhm
  */
 public class FileEncryptionGUI extends javax.swing.JFrame {
@@ -72,7 +72,7 @@ public class FileEncryptionGUI extends javax.swing.JFrame {
                 // Encrypt the file content and show the result as hex
                 resultPreviewArea.setText(hexFormat.formatHex(aes.encrypt(filePreviewArea.getText())));
             } else {
-                // Decrypt the file content and show the result as UTF-8 text
+                // Decrypt the file content and show the result
                 String res = new String(
                         aes.decrypt(hexFormat.parseHex(filePreviewArea.getText())),
                         selectedCharset
